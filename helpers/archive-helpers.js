@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
+var request = require('request');
 
 /*
  * You will need to reuse the same paths many times over in the course of this sprint.
@@ -58,5 +59,24 @@ exports.isUrlArchived = function(url, cb){
 
 };
 
-exports.downloadUrls = function(){
+exports.downloadUrls = function(url){
+
+  request("http://" + url, function (error, response, body) {
+    if (!error && response.statusCode === 200) {
+      console.log(body);
+      var fsPath = path.join(exports.paths.archivedSites, url);
+      fs.exists(fsPath, function(exists){
+        if(!exists){
+          fs.mkdir(fsPath, function(err){
+            console.log(err);
+            if (err) throw err;
+            fs.writeFile(path.join(fsPath, 'index.html'), body);
+          });
+        } else {
+          fs.writeFile(path.join(fsPath, 'index.html'), body);
+        }
+      });
+    }
+  });
 };
+exports.downloadUrls("www.yahoo.com");

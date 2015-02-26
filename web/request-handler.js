@@ -11,9 +11,9 @@ var getName = function(site) {
 exports.handleRequest = function (req, res) {
 
   if (req.method === 'GET' && req.url === '/') {
-
-    res.writeHead(200, httpHelpers.headers);
-    res.end('<input>'); //will need to send index.html eventually!
+    httpHelpers.serveAssets(res, path.join( archive.paths.siteAssets,'index.html'));
+  } else if(req.method === 'GET' && req.url === '/loading' ) {
+    httpHelpers.serveAssets(res, path.join( archive.paths.siteAssets,'loading.html'));
 
   } else if (req.method === 'GET') {
     archive.isUrlArchived(getName(req.url), function(exists){
@@ -21,7 +21,7 @@ exports.handleRequest = function (req, res) {
         res.writeHead(404, httpHelpers.headers);
         res.end();
       } else {
-        var filepath = path.join(archive.paths.archivedSites, getName(req.url));
+        var filepath = path.join(archive.paths.archivedSites, getName(req.url), 'index.html');
         fs.readFile(filepath, function (error, data) {
             if (error) throw error;
             res.writeHead(200, httpHelpers.headers);
@@ -42,8 +42,11 @@ exports.handleRequest = function (req, res) {
       var newUrl = url.parse(data, true).query.url;
       archive.addUrlToList(newUrl, function(err){
         if (err) throw err;
-        res.writeHead(302, httpHelpers.headers);
-        res.end();
+        archive.isUrlArchived(newUrl, function(exists){
+          var redirectUrl = exists ? newUrl : '/loading';
+          res.writeHead(302, httpHelpers.redirectHeaders(redirectUrl)); //TODO! Redirect to loading.html
+          res.end();
+        });
       });
     });
   }
