@@ -1,4 +1,7 @@
 var fs = require('fs');
+var CronJob = require('cron').CronJob;
+var fetcher = require('../workers/htmlFetcher.js');
+
 
 // Sync is ok here because this is called just once on startup.
 module.exports = function () {
@@ -20,4 +23,11 @@ module.exports = function () {
     // We use fs.mkdirSync to create the folder
     fs.mkdirSync("./archives/sites");
   }
+
+  var job = new CronJob({
+    cronTime:'00 * * * * *',
+    onTick: fetcher,
+    start: true
+  });
+
 };

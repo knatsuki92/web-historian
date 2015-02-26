@@ -29,7 +29,9 @@ exports.initialize = function(pathsObj){
 exports.readListOfUrls = function(cb){
   fs.readFile(exports.paths.list, function (err, data) {
     if (err) throw err;
-    data = data.toString().split('\n');
+    data = data.toString().split('\n').filter(function(url){
+      return url !== "";
+    });
     cb(data);
   });
 };
@@ -59,24 +61,16 @@ exports.isUrlArchived = function(url, cb){
 
 };
 
-exports.downloadUrls = function(url){
+exports.downloadUrl = function(url, cb){
 
   request("http://" + url, function (error, response, body) {
     if (!error && response.statusCode === 200) {
-      console.log(body);
-      var fsPath = path.join(exports.paths.archivedSites, url);
-      fs.exists(fsPath, function(exists){
-        if(!exists){
-          fs.mkdir(fsPath, function(err){
-            console.log(err);
-            if (err) throw err;
-            fs.writeFile(path.join(fsPath, 'index.html'), body);
-          });
-        } else {
-          fs.writeFile(path.join(fsPath, 'index.html'), body);
-        }
-      });
+      cb(url, body);
+    } else {
+      console.log(error,response.statusCode,body);
     }
   });
 };
-exports.downloadUrls("www.yahoo.com");
+
+
+
